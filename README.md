@@ -44,7 +44,7 @@ A comprehensive tracking system that monitors Steam game follower dynamics and c
 
 ### 1. Clone the Repository
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/Euaell/track_mentions_assessment
 cd track_mentions_assessment
 ```
 
@@ -75,6 +75,8 @@ Create a `.env` file in the `backend` directory:
 REDDIT_CLIENT_ID=your_client_id_here
 REDDIT_CLIENT_SECRET=your_client_secret_here
 REDDIT_USER_AGENT=SteamMentionsTracker/1.0
+REDDIT_USERNAME=your_reddit_username_here
+REDDIT_PASSWORD=your_reddit_password_here
 
 # Optional Configuration
 DATA_DIR=data
