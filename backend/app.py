@@ -128,7 +128,6 @@ def collect_data():
                 # If no mentions found and Reddit auth failed, use simulated data
                 if len(reddit_mentions) == 0:
                     logger.info("No Reddit mentions found, generating simulated data for demonstration")
-                    reddit_mentions = reddit_client.generate_simulated_mentions(game_name, days)
                     
             except Exception as e:
                 logger.error(f"Error collecting Reddit data: {e}")

@@ -1,6 +1,7 @@
+import sys
 import praw
 import pandas as pd
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
 import time
@@ -49,11 +50,11 @@ class RedditClient:
         try:
             # Try to access a public subreddit (doesn't require auth)
             test_sub = self.reddit.subreddit("test")
-            test_sub.display_name  # This will trigger an API call
+            assert test_sub.display_name  # This will trigger an API call
             logger.info("Reddit client initialized successfully")
         except Exception as e:
-            logger.warning(f"Reddit client connection test failed: {e}")
-            logger.info("Will attempt to continue without full authentication")
+            logger.error(f"Reddit client connection test failed: {e}")
+            sys.exit(1)
     
     def search_game_mentions(
         self, 
@@ -77,7 +78,7 @@ class RedditClient:
         logger.info(f"Searching for '{game_name}' mentions over last {days} days")
         
         mentions = []
-        cutoff_date = datetime.utcnow() - timedelta(days=days)
+        cutoff_date = datetime.now(UTC) - timedelta(days=days)
         
         # Search queries to try
         search_queries = [
@@ -106,7 +107,7 @@ class RedditClient:
                     
                     # Search submissions
                     for submission in subreddit.search(query, limit=limit, sort="new"):
-                        created_date = datetime.utcfromtimestamp(submission.created_utc)
+                        created_date = datetime.fromtimestamp(submission.created_utc, UTC)
                         
                         # Skip if too old
                         if created_date < cutoff_date:
@@ -142,56 +143,6 @@ class RedditClient:
         logger.info(f"Found {len(result)} unique mentions")
         
         return result
-    
-    def generate_simulated_mentions(self, game_name: str, days: int = 30) -> List[RedditMention]:
-        """
-        Generate simulated Reddit mentions for demonstration purposes
-        
-        Args:
-            game_name: Name of the game
-            days: Number of days to simulate
-            
-        Returns:
-            List of simulated RedditMention objects
-        """
-        import random
-        from datetime import timedelta
-        
-        logger.info(f"Generating simulated Reddit mentions for '{game_name}'")
-        
-        mentions = []
-        base_date = datetime.utcnow() - timedelta(days=days)
-        
-        # Simulate realistic mention patterns
-        subreddits = ["gaming", "Steam", "pcgaming", "GameDeals", "tipofmyjoystick"]
-        
-        for day in range(days):
-            current_date = base_date + timedelta(days=day)
-            
-            # Simulate 0-5 mentions per day with some randomness
-            daily_mentions = random.randint(0, 5)
-            
-            for mention_idx in range(daily_mentions):
-                mention_time = current_date + timedelta(
-                    hours=random.randint(0, 23),
-                    minutes=random.randint(0, 59)
-                )
-                
-                mention = RedditMention(
-                    id=f"sim_{game_name.lower().replace(' ', '_')}_{day}_{mention_idx}",
-                    title=f"Discussion about {game_name}",
-                    subreddit=random.choice(subreddits),
-                    author=f"user_{random.randint(1, 1000)}",
-                    created_utc=mention_time,
-                    score=random.randint(1, 50),
-                    num_comments=random.randint(0, 25),
-                    url=f"https://reddit.com/r/gaming/comments/simulated_{mention_idx}"
-                )
-                
-                mentions.append(mention)
-        
-        logger.info(f"Generated {len(mentions)} simulated mentions")
-        return mentions
     
     def mentions_to_dataframe(self, mentions: List[RedditMention]) -> pd.DataFrame:
         """Convert mentions to pandas DataFrame"""

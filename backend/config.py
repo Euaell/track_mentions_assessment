@@ -63,6 +63,12 @@ def load_config() -> AppConfig:
     )
     
     steam_config = SteamConfig()
+
+    # assert the reddit credentials are not None
+    if reddit_username is None or reddit_password is None:
+        raise ValueError(
+            "Reddit credentials not found. Please set REDDIT_USERNAME and REDDIT_PASSWORD environment variables."
+        )
     
     return AppConfig(
         reddit=reddit_config,
