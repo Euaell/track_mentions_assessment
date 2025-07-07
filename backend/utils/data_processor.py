@@ -2,7 +2,6 @@ import pandas as pd
 from datetime import datetime, timedelta
 from typing import List, Dict, Any, Optional, Tuple
 import logging
-import csv
 from pathlib import Path
 
 from scrapers.reddit_client import RedditMention, RedditClient
@@ -117,10 +116,6 @@ class DataProcessor:
         Returns:
             Path to the exported CSV file
         """
-        if filename is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-            filename = f"steam_reddit_comparison_{timestamp}.csv"
-        
         filepath = self.data_dir / filename
         
         # Ensure proper column order and formatting
