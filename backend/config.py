@@ -11,6 +11,8 @@ class RedditConfig:
     client_id: str
     client_secret: str
     user_agent: str
+    username: str = None
+    password: str = None
 
 @dataclass
 class SteamConfig:
@@ -44,6 +46,8 @@ def load_config() -> AppConfig:
     reddit_client_id = os.getenv("REDDIT_CLIENT_ID")
     reddit_client_secret = os.getenv("REDDIT_CLIENT_SECRET")
     reddit_user_agent = os.getenv("REDDIT_USER_AGENT", "SteamMentionsTracker/1.0")
+    reddit_username = os.getenv("REDDIT_USERNAME")
+    reddit_password = os.getenv("REDDIT_PASSWORD")
     
     if not reddit_client_id or not reddit_client_secret:
         raise ValueError(
@@ -53,7 +57,9 @@ def load_config() -> AppConfig:
     reddit_config = RedditConfig(
         client_id=reddit_client_id,
         client_secret=reddit_client_secret,
-        user_agent=reddit_user_agent
+        user_agent=reddit_user_agent,
+        username=reddit_username,
+        password=reddit_password
     )
     
     steam_config = SteamConfig()

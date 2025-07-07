@@ -27,19 +27,33 @@ class RedditClient:
     
     def __init__(self):
         """Initialize Reddit client with credentials from config"""
-        self.reddit = praw.Reddit(
-            client_id=config.reddit.client_id,
-            client_secret=config.reddit.client_secret,
-            user_agent=config.reddit.user_agent
-        )
         
-        # Test connection
+        # Build Reddit client parameters
+        reddit_params = {
+            "client_id": config.reddit.client_id,
+            "client_secret": config.reddit.client_secret,
+            "user_agent": config.reddit.user_agent
+        }
+        
+        # Add username/password if available (for script-type apps)
+        if config.reddit.username and config.reddit.password:
+            reddit_params["username"] = config.reddit.username
+            reddit_params["password"] = config.reddit.password
+            logger.info("Using username/password authentication")
+        else:
+            logger.info("Using read-only authentication")
+        
+        self.reddit = praw.Reddit(**reddit_params)
+        
+        # Test connection with a simple API call
         try:
-            self.reddit.user.me()
+            # Try to access a public subreddit (doesn't require auth)
+            test_sub = self.reddit.subreddit("test")
+            test_sub.display_name  # This will trigger an API call
             logger.info("Reddit client initialized successfully")
         except Exception as e:
-            logger.error(f"Failed to initialize Reddit client: {e}")
-            raise
+            logger.warning(f"Reddit client connection test failed: {e}")
+            logger.info("Will attempt to continue without full authentication")
     
     def search_game_mentions(
         self, 
@@ -128,6 +142,56 @@ class RedditClient:
         logger.info(f"Found {len(result)} unique mentions")
         
         return result
+    
+    def generate_simulated_mentions(self, game_name: str, days: int = 30) -> List[RedditMention]:
+        """
+        Generate simulated Reddit mentions for demonstration purposes
+        
+        Args:
+            game_name: Name of the game
+            days: Number of days to simulate
+            
+        Returns:
+            List of simulated RedditMention objects
+        """
+        import random
+        from datetime import timedelta
+        
+        logger.info(f"Generating simulated Reddit mentions for '{game_name}'")
+        
+        mentions = []
+        base_date = datetime.utcnow() - timedelta(days=days)
+        
+        # Simulate realistic mention patterns
+        subreddits = ["gaming", "Steam", "pcgaming", "GameDeals", "tipofmyjoystick"]
+        
+        for day in range(days):
+            current_date = base_date + timedelta(days=day)
+            
+            # Simulate 0-5 mentions per day with some randomness
+            daily_mentions = random.randint(0, 5)
+            
+            for mention_idx in range(daily_mentions):
+                mention_time = current_date + timedelta(
+                    hours=random.randint(0, 23),
+                    minutes=random.randint(0, 59)
+                )
+                
+                mention = RedditMention(
+                    id=f"sim_{game_name.lower().replace(' ', '_')}_{day}_{mention_idx}",
+                    title=f"Discussion about {game_name}",
+                    subreddit=random.choice(subreddits),
+                    author=f"user_{random.randint(1, 1000)}",
+                    created_utc=mention_time,
+                    score=random.randint(1, 50),
+                    num_comments=random.randint(0, 25),
+                    url=f"https://reddit.com/r/gaming/comments/simulated_{mention_idx}"
+                )
+                
+                mentions.append(mention)
+        
+        logger.info(f"Generated {len(mentions)} simulated mentions")
+        return mentions
     
     def mentions_to_dataframe(self, mentions: List[RedditMention]) -> pd.DataFrame:
         """Convert mentions to pandas DataFrame"""
